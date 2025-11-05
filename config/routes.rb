@@ -9,6 +9,11 @@ Rails.application.routes.draw do
   namespace :api do
     resources :players, only: [:create]
     resource :game_state, only: [:show, :create]
+    resources :spins, only: [:create, :show] do
+      member do
+        patch :apply_bonus
+      end
+    end
   end
 
   # Defines the root path route ("/")

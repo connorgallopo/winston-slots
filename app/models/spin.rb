@@ -1,6 +1,7 @@
 class Spin < ApplicationRecord
   belongs_to :player
 
+  before_validation :randomize_reel_values, on: :create
   before_validation :calculate_scores
 
   validates :player_id, presence: true
@@ -9,6 +10,17 @@ class Spin < ApplicationRecord
             numericality: { greater_than: 0 }
 
   BANANA_VALUE = 3_000_000
+
+  def randomize_reel_values
+    return if zillow_value.present? # Already set
+
+    values = ReelValueGenerator.generate_all
+    self.zillow_value = values[:zillow]
+    self.realtor_value = values[:realtor]
+    self.homes_value = values[:homes]
+    self.google_value = values[:google]
+    self.smart_sign_value = values[:smart_sign]
+  end
 
   def calculate_scores
     # Calculate banana count

@@ -1,11 +1,15 @@
 require 'rails_helper'
 
 RSpec.describe Spin, type: :model do
+  let(:player) { Player.create!(name: 'Test', email: 'test@example.com', phone: '555-1234') }
+
   describe 'associations' do
     it { should belong_to(:player) }
   end
 
   describe 'validations' do
+    subject { Spin.new(player: player, zillow_value: 100, realtor_value: 100, homes_value: 100, google_value: 100, smart_sign_value: 100) }
+
     it { should validate_presence_of(:player_id) }
     it { should validate_numericality_of(:zillow_value).is_greater_than(0) }
     it { should validate_numericality_of(:realtor_value).is_greater_than(0) }
