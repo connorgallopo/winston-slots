@@ -8,6 +8,7 @@ Rails.application.routes.draw do
   # API routes
   namespace :api do
     resources :players, only: [:create]
+    resource :game_state, only: [:show, :create]
   end
 
   # Defines the root path route ("/")
