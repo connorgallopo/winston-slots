@@ -10,7 +10,15 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_11_05_175514) do
+ActiveRecord::Schema[7.2].define(version: 2025_11_05_175713) do
+  create_table "game_states", force: :cascade do |t|
+    t.string "state", default: "idle", null: false
+    t.integer "current_player_id"
+    t.string "current_player_name"
+    t.integer "current_spin_id"
+    t.datetime "updated_at", null: false
+  end
+
   create_table "players", force: :cascade do |t|
     t.string "name", null: false
     t.string "email", null: false
