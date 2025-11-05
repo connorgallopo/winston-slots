@@ -6,7 +6,7 @@ import { IdleLeaderboard } from './IdleLeaderboard';
 import { WaitingScreen } from './WaitingScreen';
 import { SpinningAnimation } from './SpinningAnimation';
 import { ResultsScreen } from './ResultsScreen';
-import { FullPageLoading } from '../../components';
+import { FullPageLoading, ScreenTransition } from '../../components';
 import type { Spin } from '../../types/api';
 
 export function TVDisplay() {
@@ -52,33 +52,56 @@ export function TVDisplay() {
     return <FullPageLoading message="Loading spin data..." />;
   }
 
+  // Show loading on initial load
+  if (!gameState) {
+    return <FullPageLoading message="Connecting to game..." />;
+  }
+
   // Render based on game state
-  switch (gameState?.state) {
+  switch (gameState.state) {
     case 'idle':
-      return <IdleLeaderboard />;
+      return (
+        <ScreenTransition transitionKey="idle">
+          <IdleLeaderboard />
+        </ScreenTransition>
+      );
 
     case 'ready':
       return (
-        <WaitingScreen
-          playerName={gameState.current_player_name || 'Player'}
-        />
+        <ScreenTransition transitionKey="ready">
+          <WaitingScreen
+            playerName={gameState.current_player_name || 'Player'}
+          />
+        </ScreenTransition>
       );
 
     case 'spinning':
-      return currentSpin ? (
-        <SpinningAnimation spin={currentSpin} />
-      ) : (
-        <FullPageLoading message="Generating spin..." />
+      return (
+        <ScreenTransition transitionKey="spinning">
+          {currentSpin ? (
+            <SpinningAnimation spin={currentSpin} />
+          ) : (
+            <FullPageLoading message="Generating spin..." />
+          )}
+        </ScreenTransition>
       );
 
     case 'results':
-      return currentSpin && showResults ? (
-        <ResultsScreen spin={currentSpin} />
-      ) : (
-        <SpinningAnimation spin={currentSpin!} />
+      return (
+        <ScreenTransition transitionKey="results">
+          {currentSpin && showResults ? (
+            <ResultsScreen spin={currentSpin} />
+          ) : (
+            <SpinningAnimation spin={currentSpin!} />
+          )}
+        </ScreenTransition>
       );
 
     default:
-      return <IdleLeaderboard />;
+      return (
+        <ScreenTransition transitionKey="default">
+          <IdleLeaderboard />
+        </ScreenTransition>
+      );
   }
 }

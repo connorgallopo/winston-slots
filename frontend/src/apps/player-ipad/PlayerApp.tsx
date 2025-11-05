@@ -3,6 +3,7 @@ import { apiClient } from '../../lib/api/client';
 import { useGameStore } from '../../lib/stores/gameStore';
 import { PlayerRegistration } from './PlayerRegistration';
 import { ThankYouScreen } from './ThankYouScreen';
+import { ScreenTransition } from '../../components';
 import type { Player } from '../../types/api';
 
 type GameStep = 'registration' | 'thank_you';
@@ -40,13 +41,19 @@ export function PlayerApp() {
   // Render current step
   switch (step) {
     case 'registration':
-      return <PlayerRegistration onComplete={handleRegistrationComplete} />;
+      return (
+        <ScreenTransition transitionKey="registration">
+          <PlayerRegistration onComplete={handleRegistrationComplete} />
+        </ScreenTransition>
+      );
     case 'thank_you':
       return player ? (
-        <ThankYouScreen
-          player={player}
-          onStartOver={handleStartOver}
-        />
+        <ScreenTransition transitionKey="thank_you">
+          <ThankYouScreen
+            player={player}
+            onStartOver={handleStartOver}
+          />
+        </ScreenTransition>
       ) : null;
     default:
       return null;
