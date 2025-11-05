@@ -17,6 +17,19 @@ class GameState < ApplicationRecord
       current_spin_id: spin_id
     )
 
+    # Broadcast via ActionCable
+    ActionCable.server.broadcast(
+      'game_updates',
+      {
+        event: 'state_changed',
+        state: new_state,
+        player_id: player_id,
+        player_name: player_name,
+        spin_id: spin_id,
+        timestamp: Time.current.to_i
+      }
+    )
+
     current
   end
 
