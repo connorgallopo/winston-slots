@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useWebSocket } from './lib/websocket/useWebSocket';
 import { PlayerApp } from './apps/player-ipad';
 import { TVDisplay } from './apps/display-tv';
+import { ErrorBoundary } from './components';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -20,11 +21,19 @@ function AppContent() {
   const display = params.get('display');
 
   if (display === 'tv') {
-    return <TVDisplay />;
+    return (
+      <ErrorBoundary fallbackTitle="TV Display Error">
+        <TVDisplay />
+      </ErrorBoundary>
+    );
   }
 
   // Default to iPad
-  return <PlayerApp />;
+  return (
+    <ErrorBoundary fallbackTitle="iPad App Error">
+      <PlayerApp />
+    </ErrorBoundary>
+  );
 }
 
 function App() {
