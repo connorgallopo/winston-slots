@@ -19,6 +19,10 @@ group :development, :test do
   gem "faker"
 end
 
+group :test do
+  gem 'shoulda-matchers', '~> 6.0'
+end
+
 group :development do
   gem "spring"
 end
