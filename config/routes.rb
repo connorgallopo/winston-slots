@@ -14,6 +14,7 @@ Rails.application.routes.draw do
         patch :apply_bonus
       end
     end
+    get :leaderboard, to: 'leaderboard#index'
   end
 
   # Defines the root path route ("/")
