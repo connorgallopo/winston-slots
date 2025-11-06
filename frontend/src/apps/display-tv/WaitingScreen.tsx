@@ -8,6 +8,20 @@ interface WaitingScreenProps {
 export function WaitingScreen({ playerName }: WaitingScreenProps) {
   return (
     <div className="min-h-screen flex items-center justify-center p-12 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      {/* Ambient background shimmer */}
+      <motion.div
+        className="absolute inset-0 bg-gradient-to-br from-transparent via-blue-500/5 to-transparent pointer-events-none"
+        animate={{
+          x: ['-100%', '100%'],
+          opacity: [0.3, 0.6, 0.3],
+        }}
+        transition={{
+          duration: 4,
+          repeat: Infinity,
+          ease: 'linear',
+        }}
+      />
+
       <Card className="w-full max-w-6xl">
         <CardBody className="text-center py-20">
           <motion.div
@@ -27,7 +41,7 @@ export function WaitingScreen({ playerName }: WaitingScreenProps) {
             {/* Animated button indicator - larger for TV */}
             <motion.div
               animate={{
-                scale: [1, 1.2, 1],
+                scale: [1, 1.3, 1],
                 opacity: [0.5, 1, 0.5],
               }}
               transition={{
