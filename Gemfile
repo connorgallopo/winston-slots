@@ -14,7 +14,7 @@ gem "rpi_gpio", require: false # GPIO hardware interface
 
 group :development, :test do
   gem "debug"
-  gem "rspec-rails", "~> 6.0"
+  gem "rspec-rails", "~> 8.0"
   gem "factory_bot_rails"
   gem "faker"
 end
