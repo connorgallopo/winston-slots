@@ -19,6 +19,12 @@ export default {
           800: '#991b1b',
           900: '#7f1d1d',
         },
+        // Brand colors for reel borders and logos
+        zillow: '#006AFF',
+        realtor: '#D92228',
+        homes: '#FF5A3C',
+        google: '#34A853',
+        smartsign: '#7B2CBF',
       },
       fontFamily: {
         display: ['Inter', 'system-ui', 'sans-serif'],
