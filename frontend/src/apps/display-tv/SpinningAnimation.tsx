@@ -11,6 +11,7 @@ import {
   formatReelValue,
   generateRandomReelValues,
 } from '../../utils/reelTiers';
+import { audioManager, SOUNDS } from '../../utils/audioManager';
 
 interface SpinningAnimationProps {
   spin: Spin;
@@ -59,6 +60,15 @@ export function SpinningAnimation({ spin }: SpinningAnimationProps) {
   // Sub-component: Spinning reel (infinite scroll)
   const SpinningReel = ({ index }: { index: number }) => {
     const randomValues = generateRandomReelValues(REEL_CONFIG.valuesPerCycle);
+
+    // Play tick sounds while spinning
+    useEffect(() => {
+      const interval = setInterval(() => {
+        audioManager.play(SOUNDS.TICK, 0.3); // Lower volume
+      }, 100); // Tick every 100ms
+
+      return () => clearInterval(interval);
+    }, []);
 
     return (
       <motion.div
