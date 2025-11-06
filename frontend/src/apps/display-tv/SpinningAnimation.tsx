@@ -56,13 +56,91 @@ export function SpinningAnimation({ spin }: SpinningAnimationProps) {
     spin.smart_sign_value,
   ];
 
-  const formatValue = (value: number) => {
-    if (value === 3_000_000) return '🍌';
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-    }).format(value);
+  // Sub-component: Spinning reel (infinite scroll)
+  const SpinningReel = ({ index }: { index: number }) => {
+    const randomValues = generateRandomReelValues(REEL_CONFIG.valuesPerCycle);
+
+    return (
+      <motion.div
+        className="absolute inset-0 flex flex-col items-center gap-8"
+        animate={{ y: [0, REEL_CONFIG.scrollDistance] }}
+        transition={{
+          duration: REEL_CONFIG.spinDuration / 1000,
+          ease: 'linear',
+          repeat: Infinity,
+        }}
+      >
+        {randomValues.map((value, i) => (
+          <div
+            key={`${index}-${i}`}
+            className="text-5xl font-bold text-gray-400"
+            style={{ textShadow: '0 0 20px rgba(239, 68, 68, 0.5)' }}
+          >
+            {formatReelValue(value)}
+          </div>
+        ))}
+      </motion.div>
+    );
+  };
+
+  // Sub-component: Stopping reel (deceleration)
+  const StoppingReel = ({ value }: { value: number }) => {
+    return (
+      <motion.div
+        className="absolute inset-0 flex items-center justify-center"
+        initial={{ y: -400 }}
+        animate={{ y: 0 }}
+        transition={{
+          duration: REEL_CONFIG.decelerationDuration / 1000,
+          ease: [0.16, 1, 0.3, 1], // Deceleration cubic-bezier
+        }}
+      >
+        <div
+          className={`text-6xl font-bold ${getValueTierColor(value)}`}
+          style={{ textShadow: '0 0 20px rgba(239, 68, 68, 0.5)' }}
+        >
+          {formatReelValue(value)}
+        </div>
+      </motion.div>
+    );
+  };
+
+  // Sub-component: Stopped reel (pop animation with glow)
+  const StoppedReel = ({ value }: { value: number }) => {
+    return (
+      <motion.div className="absolute inset-0 flex items-center justify-center">
+        {/* Value with pop animation */}
+        <motion.div
+          initial={{ scale: 0.8, filter: 'brightness(0.5)' }}
+          animate={{
+            scale: [0.8, 1.15, 1.0],
+            filter: [
+              'brightness(0.5)',
+              'brightness(1.5)',
+              'brightness(1)',
+            ],
+          }}
+          transition={{
+            duration: 0.4,
+            times: [0, 0.6, 1],
+            ease: 'easeOut',
+          }}
+          className={`text-6xl font-bold ${getValueTierColor(value)} ${getValueTierGlow(value)}`}
+        >
+          {formatReelValue(value)}
+        </motion.div>
+
+        {/* Glow pulse ring */}
+        <motion.div
+          className={`absolute inset-0 rounded-lg border-4 ${getValueTierBorder(value)}`}
+          animate={{
+            scale: [1, 1.4, 1],
+            opacity: [0.8, 0, 0],
+          }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+        />
+      </motion.div>
+    );
   };
 
   return (
@@ -100,64 +178,39 @@ export function SpinningAnimation({ spin }: SpinningAnimationProps) {
                       </p>
                     </div>
 
-                    {/* Spinning animation or final value */}
+                    {/* Reel viewport with state-based rendering */}
                     <div className="h-56 flex items-center justify-center relative overflow-hidden">
-                      {!showValues ? (
-                        <motion.div
-                          animate={{
-                            y: [0, -400],
-                          }}
-                          transition={{
-                            duration: 2,
-                            repeat: Infinity,
-                            ease: 'linear',
-                            delay: index * 0.2,
-                          }}
-                          className="absolute inset-0 flex flex-col items-center gap-8"
-                        >
-                          {['$200K', '$500K', '$1M', '$3M', '🍌', '$750K', '$300K'].map(
-                            (value, i) => (
-                              <motion.div
-                                key={i}
-                                className="text-5xl font-bold text-white"
-                                style={{ textShadow: '0 0 20px rgba(239, 68, 68, 0.5)' }}
-                              >
-                                {value}
-                              </motion.div>
-                            )
-                          )}
-                        </motion.div>
-                      ) : (
-                        <motion.div
-                          initial={{ scale: 0, rotate: 180 }}
-                          animate={{ scale: 1, rotate: 0 }}
-                          transition={{
-                            delay: index * 0.1,
-                            type: 'spring',
-                            stiffness: 200,
-                            damping: 15,
-                          }}
-                          className="text-6xl font-bold text-white"
-                          style={{ textShadow: '0 0 20px rgba(239, 68, 68, 0.5)' }}
-                        >
-                          {formatValue(reelValues[index])}
-                        </motion.div>
-                      )}
+                      {/* Fade masks for depth */}
+                      <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-gray-900 via-gray-900/50 to-transparent pointer-events-none z-10" />
+                      <div className="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-gray-900 via-gray-900/50 to-transparent pointer-events-none z-10" />
 
-                      {/* Blur gradient edges */}
-                      {!showValues && (
-                        <>
-                          <div className="absolute top-0 inset-x-0 h-20 bg-gradient-to-b from-gray-900 to-transparent pointer-events-none" />
-                          <div className="absolute bottom-0 inset-x-0 h-20 bg-gradient-to-t from-gray-900 to-transparent pointer-events-none" />
-                        </>
-                      )}
+                      <AnimatePresence mode="wait">
+                        {reelStates[index] === 'spinning' && (
+                          <SpinningReel key="spinning" index={index} />
+                        )}
+                        {reelStates[index] === 'stopping' && (
+                          <StoppingReel
+                            key="stopping"
+                            value={reelValues[index]}
+                          />
+                        )}
+                        {reelStates[index] === 'stopped' && (
+                          <StoppedReel
+                            key="stopped"
+                            value={reelValues[index]}
+                          />
+                        )}
+                      </AnimatePresence>
                     </div>
                   </div>
 
-                  {/* Glow effect */}
+                  {/* Glow effect - brighter when stopped */}
                   <motion.div
                     animate={{
-                      opacity: showValues ? [0.5, 1, 0.5] : [0.3, 0.8, 0.3],
+                      opacity:
+                        reelStates[index] === 'stopped'
+                          ? [0.5, 1, 0.5]
+                          : [0.3, 0.6, 0.3],
                     }}
                     transition={{
                       duration: 1.5,
