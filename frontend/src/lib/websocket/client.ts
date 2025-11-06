@@ -1,4 +1,4 @@
-import { createConsumer, Consumer, Subscription } from '@rails/actioncable';
+import { createConsumer, type Consumer, type Subscription } from '@rails/actioncable';
 import type { StateChangedEvent, ButtonPressedEvent } from '../../types/api';
 
 const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:3000/cable';

@@ -26,7 +26,7 @@ export function SpinningAnimation({ spin }: SpinningAnimationProps) {
 
   // Sequential stop timing: left-to-right cascade
   useEffect(() => {
-    const timers: NodeJS.Timeout[] = [];
+    const timers: ReturnType<typeof setTimeout>[] = [];
 
     REEL_NAMES.forEach((_, index) => {
       // Start stopping animation (deceleration phase)

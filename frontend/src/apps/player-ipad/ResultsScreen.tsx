@@ -9,7 +9,6 @@ interface ResultsScreenProps {
 }
 
 export function ResultsScreen({ player, spin, onPlayAgain }: ResultsScreenProps) {
-  const isBanana = (value: number) => value === 3_000_000;
   const hasBonus = spin.bonus_triggered;
 
   return (

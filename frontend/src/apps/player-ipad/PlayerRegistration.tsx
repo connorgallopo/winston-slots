@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { apiClient } from '../../lib/api/client';
 import { Card, CardHeader, CardBody, CardFooter, Input, Button } from '../../components';
@@ -17,7 +17,7 @@ export function PlayerRegistration({ onComplete }: PlayerRegistrationProps) {
 
   const createPlayerMutation = useMutation({
     mutationFn: apiClient.createPlayer.bind(apiClient),
-    onSuccess: (player) => {
+    onSuccess: (player: Player) => {
       onComplete(player);
     },
     onError: (error) => {

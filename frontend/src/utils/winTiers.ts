@@ -1,11 +1,13 @@
 // frontend/src/utils/winTiers.ts
 
-export enum WinTier {
-  Normal = 'normal',
-  Big = 'big',
-  Epic = 'epic',
-  Legendary = 'legendary',
-}
+export const WinTier = {
+  Normal: 'normal',
+  Big: 'big',
+  Epic: 'epic',
+  Legendary: 'legendary',
+} as const;
+
+export type WinTier = typeof WinTier[keyof typeof WinTier];
 
 export const getWinTier = (total: number): WinTier => {
   if (total >= 5_000_000) return WinTier.Legendary;
