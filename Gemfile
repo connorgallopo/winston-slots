@@ -4,7 +4,7 @@ ruby "3.4.1"
 
 gem "rails", "~> 7.2.0"
 gem "sqlite3", "~> 1.4"
-gem "puma", "~> 6.0"
+gem "puma", "~> 7.1"
 gem "httparty" # For webhooks
 gem "rack-cors" # CORS for frontend
 gem "bootsnap", require: false
