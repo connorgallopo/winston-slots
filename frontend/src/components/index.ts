@@ -6,3 +6,4 @@ export { Input } from './Input';
 export { ErrorBoundary } from './ErrorBoundary';
 export { ScreenTransition } from './ScreenTransition';
 export { ScreenShake } from './ScreenShake';
+export { Confetti } from './Confetti';
