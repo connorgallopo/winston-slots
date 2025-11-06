@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Card, CardBody, ScoreDisplay, ReelValueDisplay } from '../../components';
+import { Card, CardBody, ScoreDisplay, ReelValueDisplay, ScreenShake, Confetti } from '../../components';
 import type { Spin } from '../../types/api';
+import { getWinTier, getWinMessage, shouldPlayBigWinEffects, WinTier } from '../../utils/winTiers';
+import { audioManager, SOUNDS } from '../../utils/audioManager';
 
 interface ResultsScreenProps {
   spin: Spin;
@@ -10,6 +12,9 @@ interface ResultsScreenProps {
 export function ResultsScreen({ spin }: ResultsScreenProps) {
   const hasBonus = spin.bonus_triggered;
   const [displayScore, setDisplayScore] = useState(0);
+  const winTier = getWinTier(spin.total_score);
+  const showBigWinEffects = shouldPlayBigWinEffects(spin.total_score);
+  const [shake, setShake] = useState(false);
 
   // Animated count-up for total score
   useEffect(() => {
@@ -31,9 +36,55 @@ export function ResultsScreen({ spin }: ResultsScreenProps) {
     return () => clearInterval(interval);
   }, [spin.total_score]);
 
+  // Play win sound effect
+  useEffect(() => {
+    switch (winTier) {
+      case WinTier.Legendary:
+        audioManager.play(SOUNDS.WIN_LEGENDARY);
+        break;
+      case WinTier.Epic:
+        audioManager.play(SOUNDS.WIN_EPIC);
+        break;
+      case WinTier.Big:
+        audioManager.play(SOUNDS.WIN_BIG);
+        break;
+      default:
+        audioManager.play(SOUNDS.WIN_NORMAL);
+    }
+  }, [winTier]);
+
+  // Trigger screen shake for big wins
+  useEffect(() => {
+    if (showBigWinEffects) {
+      setShake(true);
+      const timer = setTimeout(() => setShake(false), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [showBigWinEffects]);
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-12 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-      <div className="w-full max-w-7xl space-y-12">
+    <ScreenShake shake={shake} intensity={winTier === WinTier.Legendary ? 'high' : 'medium'}>
+      <div className="min-h-screen flex items-center justify-center p-12 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+        {/* Big win effects */}
+        {showBigWinEffects && (
+          <>
+            {/* Confetti explosion */}
+            <Confetti
+              count={winTier === WinTier.Legendary ? 150 : 100}
+              colors={['#F59E0B', '#FCD34D', '#F97316', '#EF4444']}
+              duration={3}
+            />
+
+            {/* Pulsing gold overlay */}
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-br from-yellow-500/30 to-orange-500/30 pointer-events-none"
+              animate={{ opacity: [0, 0.6, 0] }}
+              transition={{ duration: 1, repeat: 3 }}
+            />
+          </>
+        )}
+
+        <div className="w-full max-w-7xl space-y-12">
         {/* Celebration header */}
         <motion.div
           initial={{ opacity: 0, scale: 0.5 }}
@@ -64,9 +115,8 @@ export function ResultsScreen({ spin }: ResultsScreenProps) {
           ) : (
             <>
               <h1 className="text-8xl font-bold text-primary-500">
-                Congratulations!
+                {getWinMessage(spin.total_score)}
               </h1>
-              <p className="text-4xl text-gray-400">Here's what you won:</p>
             </>
           )}
         </motion.div>
@@ -151,6 +201,7 @@ export function ResultsScreen({ spin }: ResultsScreenProps) {
           </p>
         </motion.div>
       </div>
-    </div>
+      </div>
+    </ScreenShake>
   );
 }
