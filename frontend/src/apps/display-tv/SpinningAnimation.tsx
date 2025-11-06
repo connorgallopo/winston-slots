@@ -1,24 +1,51 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardBody } from '../../components';
 import type { Spin } from '../../types/api';
+import {
+  REEL_NAMES,
+  REEL_CONFIG,
+  getValueTierColor,
+  getValueTierBorder,
+  getValueTierGlow,
+  formatReelValue,
+  generateRandomReelValues,
+} from '../../utils/reelTiers';
 
 interface SpinningAnimationProps {
   spin: Spin;
 }
 
-const REEL_NAMES = ['Zillow', 'Realtor', 'Homes.com', 'Google', 'Smart Sign'];
+type ReelState = 'spinning' | 'stopping' | 'stopped';
 
 export function SpinningAnimation({ spin }: SpinningAnimationProps) {
-  const [showValues, setShowValues] = useState(false);
+  const [reelStates, setReelStates] = useState<ReelState[]>(
+    Array(5).fill('spinning')
+  );
 
-  // After 3 seconds, show the actual values
+  // Sequential stop timing: left-to-right cascade
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowValues(true);
-    }, 3000);
+    const timers: NodeJS.Timeout[] = [];
 
-    return () => clearTimeout(timer);
+    REEL_NAMES.forEach((_, index) => {
+      // Start stopping animation (deceleration phase)
+      const stopTimer = setTimeout(() => {
+        setReelStates((prev) =>
+          prev.map((state, i) => (i === index ? 'stopping' : state))
+        );
+      }, REEL_CONFIG.spinDuration + index * REEL_CONFIG.stopDelay);
+
+      // Mark as fully stopped (for pop animation)
+      const completeTimer = setTimeout(() => {
+        setReelStates((prev) =>
+          prev.map((state, i) => (i === index ? 'stopped' : state))
+        );
+      }, REEL_CONFIG.spinDuration + REEL_CONFIG.decelerationDuration + index * REEL_CONFIG.stopDelay);
+
+      timers.push(stopTimer, completeTimer);
+    });
+
+    return () => timers.forEach(clearTimeout);
   }, []);
 
   const reelValues = [
