@@ -3,6 +3,13 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../lib/api/client';
 import { Card, CardBody, Loading } from '../../components';
 
+const getPodiumIcon = (rank: number): string | null => {
+  if (rank === 1) return '👑';
+  if (rank === 2) return '🥈';
+  if (rank === 3) return '🥉';
+  return null;
+};
+
 export function IdleLeaderboard() {
   const { data: leaderboard, isLoading } = useQuery({
     queryKey: ['leaderboard'],
@@ -53,23 +60,41 @@ export function IdleLeaderboard() {
                 key={player.player_id}
                 initial={{ opacity: 0, x: -50 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
+                transition={{ delay: index * 0.15 }}
               >
                 <Card className={index === 0 ? 'border-4 border-primary-500' : ''}>
                   <CardBody className="py-8">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-8">
                         {/* Rank */}
-                        <div
-                          className={`
+                        <div className="relative">
+                          {/* Animated podium icon */}
+                          {getPodiumIcon(player.rank) && (
+                            <motion.span
+                              className="absolute -top-10 left-1/2 -translate-x-1/2 text-5xl"
+                              animate={{ y: [-5, 0, -5] }}
+                              transition={{
+                                duration: 2,
+                                repeat: Infinity,
+                                ease: 'easeInOut',
+                              }}
+                            >
+                              {getPodiumIcon(player.rank)}
+                            </motion.span>
+                          )}
+
+                          {/* Rank badge */}
+                          <div
+                            className={`
                             w-20 h-20 rounded-full flex items-center justify-center text-4xl font-bold
                             ${index === 0 ? 'bg-yellow-500 text-gray-900' : ''}
                             ${index === 1 ? 'bg-gray-400 text-gray-900' : ''}
                             ${index === 2 ? 'bg-orange-600 text-white' : ''}
                             ${index > 2 ? 'bg-gray-700 text-gray-300' : ''}
                           `}
-                        >
-                          {player.rank}
+                          >
+                            {player.rank}
+                          </div>
                         </div>
 
                         {/* Name */}
