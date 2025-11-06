@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardBody, ScoreDisplay, ReelValueDisplay } from '../../components';
 import type { Spin } from '../../types/api';
@@ -8,6 +9,27 @@ interface ResultsScreenProps {
 
 export function ResultsScreen({ spin }: ResultsScreenProps) {
   const hasBonus = spin.bonus_triggered;
+  const [displayScore, setDisplayScore] = useState(0);
+
+  // Animated count-up for total score
+  useEffect(() => {
+    const duration = 2000; // 2 second count-up
+    const steps = 60;
+    const increment = spin.total_score / steps;
+    let current = 0;
+
+    const interval = setInterval(() => {
+      current += increment;
+      if (current >= spin.total_score) {
+        setDisplayScore(spin.total_score);
+        clearInterval(interval);
+      } else {
+        setDisplayScore(Math.floor(current));
+      }
+    }, duration / steps);
+
+    return () => clearInterval(interval);
+  }, [spin.total_score]);
 
   return (
     <div className="min-h-screen flex items-center justify-center p-12 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
@@ -99,7 +121,7 @@ export function ResultsScreen({ spin }: ResultsScreenProps) {
           <Card>
             <CardBody className="py-16">
               <ScoreDisplay
-                score={spin.total_score}
+                score={displayScore}
                 label="Total Winnings"
                 size="lg"
               />
