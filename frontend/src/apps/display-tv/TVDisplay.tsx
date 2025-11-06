@@ -6,7 +6,7 @@ import { IdleLeaderboard } from './IdleLeaderboard';
 import { WaitingScreen } from './WaitingScreen';
 import { SpinningAnimation } from './SpinningAnimation';
 import { ResultsScreen } from './ResultsScreen';
-import { FullPageLoading, ScreenTransition } from '../../components';
+import { FullPageLoading, ScreenTransition, AudioToggle } from '../../components';
 import type { Spin } from '../../types/api';
 
 export function TVDisplay() {
@@ -58,50 +58,59 @@ export function TVDisplay() {
   }
 
   // Render based on game state
-  switch (gameState.state) {
-    case 'idle':
-      return (
-        <ScreenTransition transitionKey="idle">
-          <IdleLeaderboard />
-        </ScreenTransition>
-      );
+  const renderScreen = () => {
+    switch (gameState.state) {
+      case 'idle':
+        return (
+          <ScreenTransition transitionKey="idle">
+            <IdleLeaderboard />
+          </ScreenTransition>
+        );
 
-    case 'ready':
-      return (
-        <ScreenTransition transitionKey="ready">
-          <WaitingScreen
-            playerName={gameState.current_player_name || 'Player'}
-          />
-        </ScreenTransition>
-      );
+      case 'ready':
+        return (
+          <ScreenTransition transitionKey="ready">
+            <WaitingScreen
+              playerName={gameState.current_player_name || 'Player'}
+            />
+          </ScreenTransition>
+        );
 
-    case 'spinning':
-      return (
-        <ScreenTransition transitionKey="spinning">
-          {currentSpin ? (
-            <SpinningAnimation spin={currentSpin} />
-          ) : (
-            <FullPageLoading message="Generating spin..." />
-          )}
-        </ScreenTransition>
-      );
+      case 'spinning':
+        return (
+          <ScreenTransition transitionKey="spinning">
+            {currentSpin ? (
+              <SpinningAnimation spin={currentSpin} />
+            ) : (
+              <FullPageLoading message="Generating spin..." />
+            )}
+          </ScreenTransition>
+        );
 
-    case 'results':
-      return (
-        <ScreenTransition transitionKey="results">
-          {currentSpin && showResults ? (
-            <ResultsScreen spin={currentSpin} />
-          ) : (
-            <SpinningAnimation spin={currentSpin!} />
-          )}
-        </ScreenTransition>
-      );
+      case 'results':
+        return (
+          <ScreenTransition transitionKey="results">
+            {currentSpin && showResults ? (
+              <ResultsScreen spin={currentSpin} />
+            ) : (
+              <SpinningAnimation spin={currentSpin!} />
+            )}
+          </ScreenTransition>
+        );
 
-    default:
-      return (
-        <ScreenTransition transitionKey="default">
-          <IdleLeaderboard />
-        </ScreenTransition>
-      );
-  }
+      default:
+        return (
+          <ScreenTransition transitionKey="default">
+            <IdleLeaderboard />
+          </ScreenTransition>
+        );
+    }
+  };
+
+  return (
+    <>
+      {renderScreen()}
+      <AudioToggle />
+    </>
+  );
 }
