@@ -5,3 +5,4 @@ export { ScoreDisplay, ReelValueDisplay } from './ScoreDisplay';
 export { Input } from './Input';
 export { ErrorBoundary } from './ErrorBoundary';
 export { ScreenTransition } from './ScreenTransition';
+export { ScreenShake } from './ScreenShake';
