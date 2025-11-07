@@ -14,12 +14,16 @@ import {
 } from '../../utils/winTiers';
 import { audioManager, SOUNDS } from '../../utils/audioManager';
 import { RESULTS_ANIMATION } from '../../config';
+import { useGameStore } from '../../lib/stores/gameStore';
 
 interface ResultsScreenProps {
   spin: Spin;
 }
 
 export function ResultsScreen({ spin }: ResultsScreenProps) {
+  const gameState = useGameStore((state) => state.gameState);
+  const playerName = gameState?.current_player_name?.split(' ')[0] || 'PLAYER';
+
   const hasBonus = spin.bonus_triggered;
   const [displayScore, setDisplayScore] = useState(0);
   const winTier = getWinTier(spin.total_score);
@@ -129,7 +133,7 @@ export function ResultsScreen({ spin }: ResultsScreenProps) {
               transition={{ delay: 0.2 }}
               className="text-5xl font-bold text-gray-300 uppercase tracking-wide"
             >
-              PLAYER'S TOTAL
+              {playerName.toUpperCase()}'S TOTAL
             </motion.p>
 
             {hasBonus ? (

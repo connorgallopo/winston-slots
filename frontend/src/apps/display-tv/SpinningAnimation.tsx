@@ -1,6 +1,6 @@
 // frontend/src/apps/display-tv/SpinningAnimation.tsx
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardBody } from '../../components';
 import type { Spin } from '../../types/api';
@@ -25,6 +25,12 @@ interface ReelStateData {
   state: ReelState;
   startTime: number;
 }
+
+// Styles extracted to avoid object creation on every render
+const REEL_STYLES = {
+  spinningText: { textShadow: '0 0 20px rgba(239, 68, 68, 0.3)' },
+  stoppingText: { textShadow: '0 0 30px rgba(239, 68, 68, 0.6)' },
+} as const;
 
 export function SpinningAnimation({ spin }: SpinningAnimationProps) {
   const [reelStates, setReelStates] = useState<ReelStateData[]>(
@@ -71,8 +77,8 @@ export function SpinningAnimation({ spin }: SpinningAnimationProps) {
             i === index ? { ...item, state: 'stopped' } : item
           )
         );
-        // Play landing sound (using TICK as fallback)
-        audioManager.play(SOUNDS.TICK, 0.5);
+        // Play landing sound
+        audioManager.play(SOUNDS.REEL_STOP, 0.5);
       }, index * REEL_ANIMATION.staggerDelay + REEL_ANIMATION.spinDuration);
 
       timers.push(startTimer, stopTimer, completeTimer);
@@ -82,7 +88,7 @@ export function SpinningAnimation({ spin }: SpinningAnimationProps) {
   }, []);
 
   // Sub-component: Reel with logo cover that slides away
-  const IdleReel = ({ reelName, brandColor }: { reelName: string; brandColor: string }) => (
+  const IdleReel = memo(({ reelName, brandColor }: { reelName: string; brandColor: string }) => (
     <motion.div
       className="absolute inset-0 flex items-center justify-center"
       exit={{ y: -400, opacity: 0 }}
@@ -90,16 +96,22 @@ export function SpinningAnimation({ spin }: SpinningAnimationProps) {
     >
       <div
         className="text-6xl font-bold"
-        style={{ color: brandColor, textShadow: `0 0 30px ${brandColor}80` }}
+        style={{
+          color: brandColor,
+          textShadow: `0 0 30px ${brandColor}80`,
+        }}
       >
         {reelName}
       </div>
     </motion.div>
-  );
+  ));
 
   // Sub-component: Spinning reel (infinite scroll with acceleration)
-  const SpinningReel = ({ index }: { index: number }) => {
-    const randomValues = generateRandomReelValues(REEL_ANIMATION.valuesPerCycle);
+  const SpinningReel = memo(({ index }: { index: number }) => {
+    const randomValues = useMemo(
+      () => generateRandomReelValues(REEL_ANIMATION.valuesPerCycle),
+      [index]
+    );
 
     return (
       <motion.div
@@ -115,17 +127,17 @@ export function SpinningAnimation({ spin }: SpinningAnimationProps) {
           <div
             key={`${index}-${i}`}
             className="text-5xl font-bold text-gray-400 opacity-60"
-            style={{ textShadow: '0 0 20px rgba(239, 68, 68, 0.3)' }}
+            style={REEL_STYLES.spinningText}
           >
             {formatReelValue(value)}
           </div>
         ))}
       </motion.div>
     );
-  };
+  });
 
   // Sub-component: Stopping reel (deceleration to final value)
-  const StoppingReel = ({ value }: { value: number }) => {
+  const StoppingReel = memo(({ value }: { value: number }) => {
     return (
       <motion.div
         className="absolute inset-0 flex items-center justify-center"
@@ -138,16 +150,16 @@ export function SpinningAnimation({ spin }: SpinningAnimationProps) {
       >
         <div
           className={`text-6xl font-bold ${getValueTierColor(value)}`}
-          style={{ textShadow: '0 0 30px rgba(239, 68, 68, 0.6)' }}
+          style={REEL_STYLES.stoppingText}
         >
           {formatReelValue(value)}
         </div>
       </motion.div>
     );
-  };
+  });
 
   // Sub-component: Stopped reel (pop animation with glow)
-  const StoppedReel = ({ value }: { value: number }) => {
+  const StoppedReel = memo(({ value }: { value: number }) => {
     return (
       <motion.div className="absolute inset-0 flex items-center justify-center">
         {/* Value with pop animation */}
@@ -183,7 +195,7 @@ export function SpinningAnimation({ spin }: SpinningAnimationProps) {
         />
       </motion.div>
     );
-  };
+  });
 
   // Get brand color for each reel
   const getBrandColor = (index: number): string => {

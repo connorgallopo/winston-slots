@@ -72,6 +72,7 @@ export const audioManager = new AudioManager();
 // Sound name constants
 export const SOUNDS = {
   TICK: 'tick',
+  REEL_STOP: 'reel-stop',
   WIN_NORMAL: 'win-normal',
   WIN_BIG: 'win-big',
   WIN_EPIC: 'win-epic',
@@ -87,6 +88,7 @@ export const preloadSounds = async (): Promise<void> => {
   // For now, these will fail gracefully
   const soundsToLoad = [
     { name: SOUNDS.TICK, url: '/sounds/tick.mp3' },
+    { name: SOUNDS.REEL_STOP, url: '/sounds/reel-stop.mp3' },
     { name: SOUNDS.WIN_NORMAL, url: '/sounds/win-normal.mp3' },
     { name: SOUNDS.WIN_BIG, url: '/sounds/win-big.mp3' },
     { name: SOUNDS.WIN_EPIC, url: '/sounds/win-epic.mp3' },

@@ -3,18 +3,25 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardBody } from '../../components';
+import { TRANSITION_TIMING, SPRING_PRESETS } from '../../config';
 
 interface WaitingScreenProps {
   playerName: string;
 }
 
 export function WaitingScreen({ playerName }: WaitingScreenProps) {
-  const [countdown, setCountdown] = useState(3);
+  const [countdown, setCountdown] = useState(Math.floor(TRANSITION_TIMING.readyCountdown / 1000));
 
   useEffect(() => {
     // Visual countdown that doesn't actually prevent spinning
     const interval = setInterval(() => {
-      setCountdown((prev) => (prev > 0 ? prev - 1 : 0));
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
 
     return () => clearInterval(interval);
@@ -88,7 +95,7 @@ export function WaitingScreen({ playerName }: WaitingScreenProps) {
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                transition={{ type: 'spring', stiffness: 200 }}
+                transition={SPRING_PRESETS.standard}
               >
                 <motion.p
                   className="text-9xl font-bold text-yellow-400"

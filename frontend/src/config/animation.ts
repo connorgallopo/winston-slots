@@ -78,6 +78,14 @@ export const ANIMATION_CONFIG = {
     shimmerDuration: 4000,     // Background shimmer loop
     lightRaySpeed: 8000,       // Moving light rays
   },
+
+  // Spring animation presets for Framer Motion
+  springs: {
+    standard: { type: 'spring' as const, stiffness: 200, damping: 15 },
+    bouncy: { type: 'spring' as const, stiffness: 300, damping: 10 },
+    gentle: { type: 'spring' as const, stiffness: 150, damping: 20 },
+    snappy: { type: 'spring' as const, stiffness: 400, damping: 25 },
+  },
 } as const;
 
 // Export individual sections for easier imports
@@ -86,3 +94,4 @@ export const TRANSITION_TIMING = ANIMATION_CONFIG.transitions;
 export const RESULTS_ANIMATION = ANIMATION_CONFIG.results;
 export const LEADERBOARD_ANIMATION = ANIMATION_CONFIG.leaderboard;
 export const BACKGROUND_ANIMATION = ANIMATION_CONFIG.background;
+export const SPRING_PRESETS = ANIMATION_CONFIG.springs;
