@@ -5,5 +5,5 @@
 ruby 3.4.1
 
 # Node.js version for Vite frontend
-# Note: Vite prefers Node 20.19+ or 22.12+, but 22.8.0 works with warnings
-nodejs 22.8.0
+# Note: Vite requires Node 20.19+ or 22.12+
+nodejs 22.12.0
