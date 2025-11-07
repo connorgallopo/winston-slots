@@ -7,6 +7,7 @@ import { WaitingScreen } from './WaitingScreen';
 import { SpinningAnimation } from './SpinningAnimation';
 import { ResultsScreen } from './ResultsScreen';
 import { FullPageLoading, ScreenTransition, AudioToggle } from '../../components';
+import { TRANSITION_TIMING } from '../../config';
 import type { Spin } from '../../types/api';
 
 export function TVDisplay() {
@@ -43,7 +44,7 @@ export function TVDisplay() {
       setTimeout(() => {
         setCurrentSpin(null);
         setShowResults(false);
-      }, 5000); // Show results for 5 seconds before returning to leaderboard
+      }, TRANSITION_TIMING.leaderboardReturn);
     }
   }, [gameState, currentSpin]);
 

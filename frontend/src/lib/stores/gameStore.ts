@@ -22,8 +22,11 @@ interface GameStore {
   isConnected: boolean;
   setIsConnected: (connected: boolean) => void;
 
-  // Reset
+  // Reset to initial state (called after results displayed)
   reset: () => void;
+
+  // Full reset including game state
+  hardReset: () => void;
 }
 
 export const useGameStore = create<GameStore>((set) => ({
@@ -41,9 +44,19 @@ export const useGameStore = create<GameStore>((set) => ({
   setLeaderboard: (leaderboard) => set({ leaderboard }),
   setIsConnected: (isConnected) => set({ isConnected }),
 
+  // Soft reset (preserves connection and leaderboard)
   reset: () =>
     set({
       currentPlayer: null,
       currentSpin: null,
+    }),
+
+  // Hard reset (clears everything)
+  hardReset: () =>
+    set({
+      gameState: null,
+      currentPlayer: null,
+      currentSpin: null,
+      leaderboard: [],
     }),
 }));
