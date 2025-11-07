@@ -71,8 +71,8 @@ export function SpinningAnimation({ spin }: SpinningAnimationProps) {
             i === index ? { ...item, state: 'stopped' } : item
           )
         );
-        // Play landing sound
-        audioManager.play(SOUNDS.REEL_STOP, 0.5);
+        // Play landing sound (using TICK as fallback)
+        audioManager.play(SOUNDS.TICK, 0.5);
       }, index * REEL_ANIMATION.staggerDelay + REEL_ANIMATION.spinDuration);
 
       timers.push(startTimer, stopTimer, completeTimer);
@@ -154,14 +154,14 @@ export function SpinningAnimation({ spin }: SpinningAnimationProps) {
         <motion.div
           initial={{ scale: REEL_ANIMATION.popAnimation.scaleKeyframes[0] }}
           animate={{
-            scale: REEL_ANIMATION.popAnimation.scaleKeyframes,
+            scale: [...REEL_ANIMATION.popAnimation.scaleKeyframes],
             filter: REEL_ANIMATION.popAnimation.brightnessKeyframes.map(
               (b) => `brightness(${b})`
             ),
           }}
           transition={{
             duration: REEL_ANIMATION.popAnimation.duration / 1000,
-            times: REEL_ANIMATION.popAnimation.times,
+            times: [...REEL_ANIMATION.popAnimation.times],
             ease: 'easeOut',
           }}
           className={`text-7xl font-bold ${getValueTierColor(value)} ${getValueTierGlow(value)}`}
@@ -173,8 +173,8 @@ export function SpinningAnimation({ spin }: SpinningAnimationProps) {
         <motion.div
           className={`absolute inset-0 rounded-lg border-4 ${getValueTierBorder(value)}`}
           animate={{
-            scale: REEL_ANIMATION.glowPulse.scaleKeyframes,
-            opacity: REEL_ANIMATION.glowPulse.opacityKeyframes,
+            scale: [...REEL_ANIMATION.glowPulse.scaleKeyframes],
+            opacity: [...REEL_ANIMATION.glowPulse.opacityKeyframes],
           }}
           transition={{
             duration: REEL_ANIMATION.glowPulse.duration / 1000,

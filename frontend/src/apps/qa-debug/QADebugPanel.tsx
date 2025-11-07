@@ -8,14 +8,14 @@ import { Card, CardBody, Button } from '../../components';
 export function QADebugPanel() {
   const [isRunning, setIsRunning] = useState(false);
   const [results, setResults] = useState<QATestResult[]>([]);
-  const [debugger] = useState(() => new QADebugger());
+  const [qaDebugger] = useState(() => new QADebugger());
 
   const runTests = async () => {
     setIsRunning(true);
     setResults([]);
 
     try {
-      const testResults = await debugger.runAutomatedTests(20);
+      const testResults = await qaDebugger.runAutomatedTests(20);
       setResults(testResults);
     } catch (error) {
       console.error('QA tests failed:', error);
@@ -24,7 +24,7 @@ export function QADebugPanel() {
     }
   };
 
-  const summary = results.length > 0 ? debugger.getSummary() : null;
+  const summary = results.length > 0 ? qaDebugger.getSummary() : null;
 
   return (
     <div className="min-h-screen p-12 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">

@@ -30,7 +30,6 @@ export function ResultsScreen({ spin }: ResultsScreenProps) {
   useEffect(() => {
     const duration = RESULTS_ANIMATION.countUpDuration;
     const steps = RESULTS_ANIMATION.countUpSteps;
-    const increment = spin.total_score / steps;
     let current = 0;
     let step = 0;
 
@@ -80,9 +79,10 @@ export function ResultsScreen({ spin }: ResultsScreenProps) {
 
   const confettiCount = getConfettiCount(winTier);
   const shakeIntensity = getShakeIntensity(winTier);
+  const screenShakeIntensity = shakeIntensity === 'low' ? undefined : shakeIntensity;
 
   return (
-    <ScreenShake shake={shake} intensity={shakeIntensity}>
+    <ScreenShake shake={shake} intensity={screenShakeIntensity}>
       <div className="min-h-screen flex items-center justify-center p-12 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
         {/* Big win effects with tiered intensity */}
         {showBigWinEffects && (
@@ -129,7 +129,7 @@ export function ResultsScreen({ spin }: ResultsScreenProps) {
               transition={{ delay: 0.2 }}
               className="text-5xl font-bold text-gray-300 uppercase tracking-wide"
             >
-              {spin.player_name?.split(' ')[0]}'S TOTAL
+              PLAYER'S TOTAL
             </motion.p>
 
             {hasBonus ? (

@@ -1,7 +1,5 @@
 // frontend/src/utils/qaDebug.ts
 
-import type { Spin } from '../types/api';
-
 export interface QATestResult {
   testNumber: number;
   reelValues: number[];
@@ -13,12 +11,10 @@ export interface QATestResult {
 
 export class QADebugger {
   private results: QATestResult[] = [];
-  private testCount = 0;
 
   async runAutomatedTests(count: number = 20): Promise<QATestResult[]> {
     console.log(`🧪 Starting ${count} automated spin tests...`);
     this.results = [];
-    this.testCount = 0;
 
     for (let i = 0; i < count; i++) {
       await this.runSingleTest(i + 1);

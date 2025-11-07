@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardBody } from '../../components';
-import { TRANSITION_TIMING } from '../../config';
 
 interface WaitingScreenProps {
   playerName: string;
