@@ -52,9 +52,13 @@ export function TVDisplay() {
     return <FullPageLoading message="Loading spin data..." />;
   }
 
-  // Show loading on initial load
+  // Show leaderboard on initial load instead of loading spinner
   if (!gameState) {
-    return <FullPageLoading message="Connecting to game..." />;
+    return (
+      <ScreenTransition transitionKey="initial-leaderboard">
+        <IdleLeaderboard />
+      </ScreenTransition>
+    );
   }
 
   // Render based on game state
