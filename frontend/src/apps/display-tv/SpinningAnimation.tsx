@@ -1,10 +1,11 @@
+// frontend/src/apps/display-tv/SpinningAnimation.tsx
+
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardBody } from '../../components';
 import type { Spin } from '../../types/api';
 import {
   REEL_NAMES,
-  REEL_CONFIG,
   getValueTierColor,
   getValueTierBorder,
   getValueTierGlow,
@@ -12,42 +13,23 @@ import {
   generateRandomReelValues,
 } from '../../utils/reelTiers';
 import { audioManager, SOUNDS } from '../../utils/audioManager';
+import { REEL_ANIMATION, BRAND_COLORS } from '../../config';
 
 interface SpinningAnimationProps {
   spin: Spin;
 }
 
-type ReelState = 'spinning' | 'stopping' | 'stopped';
+type ReelState = 'idle' | 'spinning' | 'stopping' | 'stopped';
+
+interface ReelStateData {
+  state: ReelState;
+  startTime: number;
+}
 
 export function SpinningAnimation({ spin }: SpinningAnimationProps) {
-  const [reelStates, setReelStates] = useState<ReelState[]>(
-    Array(5).fill('spinning')
+  const [reelStates, setReelStates] = useState<ReelStateData[]>(
+    REEL_NAMES.map(() => ({ state: 'idle', startTime: 0 }))
   );
-
-  // Sequential stop timing: left-to-right cascade
-  useEffect(() => {
-    const timers: ReturnType<typeof setTimeout>[] = [];
-
-    REEL_NAMES.forEach((_, index) => {
-      // Start stopping animation (deceleration phase)
-      const stopTimer = setTimeout(() => {
-        setReelStates((prev) =>
-          prev.map((state, i) => (i === index ? 'stopping' : state))
-        );
-      }, REEL_CONFIG.spinDuration + index * REEL_CONFIG.stopDelay);
-
-      // Mark as fully stopped (for pop animation)
-      const completeTimer = setTimeout(() => {
-        setReelStates((prev) =>
-          prev.map((state, i) => (i === index ? 'stopped' : state))
-        );
-      }, REEL_CONFIG.spinDuration + REEL_CONFIG.decelerationDuration + index * REEL_CONFIG.stopDelay);
-
-      timers.push(stopTimer, completeTimer);
-    });
-
-    return () => timers.forEach(clearTimeout);
-  }, []);
 
   const reelValues = [
     spin.zillow_value,
@@ -57,25 +39,74 @@ export function SpinningAnimation({ spin }: SpinningAnimationProps) {
     spin.smart_sign_value,
   ];
 
-  // Sub-component: Spinning reel (infinite scroll)
+  // Sequential reel start with stagger delay
+  useEffect(() => {
+    const timers: ReturnType<typeof setTimeout>[] = [];
+
+    REEL_NAMES.forEach((_, index) => {
+      // Start spinning with stagger
+      const startTimer = setTimeout(() => {
+        setReelStates((prev) =>
+          prev.map((item, i) =>
+            i === index
+              ? { state: 'spinning', startTime: Date.now() }
+              : item
+          )
+        );
+      }, index * REEL_ANIMATION.staggerDelay);
+
+      // Start deceleration phase
+      const stopTimer = setTimeout(() => {
+        setReelStates((prev) =>
+          prev.map((item, i) =>
+            i === index ? { ...item, state: 'stopping' } : item
+          )
+        );
+      }, index * REEL_ANIMATION.staggerDelay + REEL_ANIMATION.phases.acceleration + REEL_ANIMATION.phases.constant);
+
+      // Mark as fully stopped (for pop animation)
+      const completeTimer = setTimeout(() => {
+        setReelStates((prev) =>
+          prev.map((item, i) =>
+            i === index ? { ...item, state: 'stopped' } : item
+          )
+        );
+        // Play landing sound
+        audioManager.play(SOUNDS.REEL_STOP, 0.5);
+      }, index * REEL_ANIMATION.staggerDelay + REEL_ANIMATION.spinDuration);
+
+      timers.push(startTimer, stopTimer, completeTimer);
+    });
+
+    return () => timers.forEach(clearTimeout);
+  }, []);
+
+  // Sub-component: Reel with logo cover that slides away
+  const IdleReel = ({ reelName, brandColor }: { reelName: string; brandColor: string }) => (
+    <motion.div
+      className="absolute inset-0 flex items-center justify-center"
+      exit={{ y: -400, opacity: 0 }}
+      transition={{ duration: 0.3, ease: 'easeIn' }}
+    >
+      <div
+        className="text-6xl font-bold"
+        style={{ color: brandColor, textShadow: `0 0 30px ${brandColor}80` }}
+      >
+        {reelName}
+      </div>
+    </motion.div>
+  );
+
+  // Sub-component: Spinning reel (infinite scroll with acceleration)
   const SpinningReel = ({ index }: { index: number }) => {
-    const randomValues = generateRandomReelValues(REEL_CONFIG.valuesPerCycle);
-
-    // Play tick sounds while spinning
-    useEffect(() => {
-      const interval = setInterval(() => {
-        audioManager.play(SOUNDS.TICK, 0.3); // Lower volume
-      }, 100); // Tick every 100ms
-
-      return () => clearInterval(interval);
-    }, []);
+    const randomValues = generateRandomReelValues(REEL_ANIMATION.valuesPerCycle);
 
     return (
       <motion.div
-        className="absolute inset-0 flex flex-col items-center gap-8"
-        animate={{ y: [0, REEL_CONFIG.scrollDistance] }}
+        className="absolute inset-0 flex flex-col items-center gap-8 justify-start pt-16"
+        animate={{ y: [0, REEL_ANIMATION.scrollDistance] }}
         transition={{
-          duration: REEL_CONFIG.spinDuration / 1000,
+          duration: (REEL_ANIMATION.phases.acceleration + REEL_ANIMATION.phases.constant) / 1000,
           ease: 'linear',
           repeat: Infinity,
         }}
@@ -83,8 +114,8 @@ export function SpinningAnimation({ spin }: SpinningAnimationProps) {
         {randomValues.map((value, i) => (
           <div
             key={`${index}-${i}`}
-            className="text-5xl font-bold text-gray-400"
-            style={{ textShadow: '0 0 20px rgba(239, 68, 68, 0.5)' }}
+            className="text-5xl font-bold text-gray-400 opacity-60"
+            style={{ textShadow: '0 0 20px rgba(239, 68, 68, 0.3)' }}
           >
             {formatReelValue(value)}
           </div>
@@ -93,21 +124,21 @@ export function SpinningAnimation({ spin }: SpinningAnimationProps) {
     );
   };
 
-  // Sub-component: Stopping reel (deceleration)
+  // Sub-component: Stopping reel (deceleration to final value)
   const StoppingReel = ({ value }: { value: number }) => {
     return (
       <motion.div
         className="absolute inset-0 flex items-center justify-center"
-        initial={{ y: -400 }}
-        animate={{ y: 0 }}
+        initial={{ y: -400, opacity: 0.5 }}
+        animate={{ y: 0, opacity: 1 }}
         transition={{
-          duration: REEL_CONFIG.decelerationDuration / 1000,
-          ease: [0.16, 1, 0.3, 1], // Deceleration cubic-bezier
+          duration: REEL_ANIMATION.phases.deceleration / 1000,
+          ease: REEL_ANIMATION.easing.deceleration,
         }}
       >
         <div
           className={`text-6xl font-bold ${getValueTierColor(value)}`}
-          style={{ textShadow: '0 0 20px rgba(239, 68, 68, 0.5)' }}
+          style={{ textShadow: '0 0 30px rgba(239, 68, 68, 0.6)' }}
         >
           {formatReelValue(value)}
         </div>
@@ -121,21 +152,19 @@ export function SpinningAnimation({ spin }: SpinningAnimationProps) {
       <motion.div className="absolute inset-0 flex items-center justify-center">
         {/* Value with pop animation */}
         <motion.div
-          initial={{ scale: 0.8, filter: 'brightness(0.5)' }}
+          initial={{ scale: REEL_ANIMATION.popAnimation.scaleKeyframes[0] }}
           animate={{
-            scale: [0.8, 1.15, 1.0],
-            filter: [
-              'brightness(0.5)',
-              'brightness(1.5)',
-              'brightness(1)',
-            ],
+            scale: REEL_ANIMATION.popAnimation.scaleKeyframes,
+            filter: REEL_ANIMATION.popAnimation.brightnessKeyframes.map(
+              (b) => `brightness(${b})`
+            ),
           }}
           transition={{
-            duration: 0.4,
-            times: [0, 0.6, 1],
+            duration: REEL_ANIMATION.popAnimation.duration / 1000,
+            times: REEL_ANIMATION.popAnimation.times,
             ease: 'easeOut',
           }}
-          className={`text-6xl font-bold ${getValueTierColor(value)} ${getValueTierGlow(value)}`}
+          className={`text-7xl font-bold ${getValueTierColor(value)} ${getValueTierGlow(value)}`}
         >
           {formatReelValue(value)}
         </motion.div>
@@ -144,18 +173,41 @@ export function SpinningAnimation({ spin }: SpinningAnimationProps) {
         <motion.div
           className={`absolute inset-0 rounded-lg border-4 ${getValueTierBorder(value)}`}
           animate={{
-            scale: [1, 1.4, 1],
-            opacity: [0.8, 0, 0],
+            scale: REEL_ANIMATION.glowPulse.scaleKeyframes,
+            opacity: REEL_ANIMATION.glowPulse.opacityKeyframes,
           }}
-          transition={{ duration: 0.8, ease: 'easeOut' }}
+          transition={{
+            duration: REEL_ANIMATION.glowPulse.duration / 1000,
+            ease: 'easeOut'
+          }}
         />
       </motion.div>
     );
   };
 
+  // Get brand color for each reel
+  const getBrandColor = (index: number): string => {
+    const brandKeys = ['zillow', 'realtor', 'homes', 'google', 'smartSign'] as const;
+    return BRAND_COLORS[brandKeys[index]];
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-12 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-      <div className="w-full max-w-7xl space-y-12">
+      {/* Ambient background shimmer */}
+      <motion.div
+        className="absolute inset-0 bg-gradient-to-br from-transparent via-blue-500/5 to-transparent pointer-events-none"
+        animate={{
+          x: ['-100%', '100%'],
+          opacity: [0.3, 0.6, 0.3],
+        }}
+        transition={{
+          duration: 4,
+          repeat: Infinity,
+          ease: 'linear',
+        }}
+      />
+
+      <div className="w-full max-w-7xl space-y-12 relative z-10">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -171,67 +223,96 @@ export function SpinningAnimation({ spin }: SpinningAnimationProps) {
         <Card>
           <CardBody className="p-12">
             <div className="grid grid-cols-5 gap-8">
-              {REEL_NAMES.map((name, index) => (
-                <motion.div
-                  key={name}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="relative"
-                >
-                  {/* Reel container */}
-                  <div className="bg-gray-900 rounded-xl p-8 border-4 border-primary-500 shadow-2xl overflow-hidden">
-                    {/* Reel label */}
-                    <div className="text-center mb-6">
-                      <p className="text-lg font-semibold text-gray-400 uppercase tracking-wide">
-                        {name}
-                      </p>
-                    </div>
+              {REEL_NAMES.map((name, index) => {
+                const reelState = reelStates[index];
+                const isActive = reelState.state === 'spinning' || reelState.state === 'stopping';
 
-                    {/* Reel viewport with state-based rendering */}
-                    <div className="h-56 flex items-center justify-center relative overflow-hidden">
-                      {/* Fade masks for depth */}
-                      <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-gray-900 via-gray-900/50 to-transparent pointer-events-none z-10" />
-                      <div className="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-gray-900 via-gray-900/50 to-transparent pointer-events-none z-10" />
-
-                      <AnimatePresence mode="wait">
-                        {reelStates[index] === 'spinning' && (
-                          <SpinningReel key="spinning" index={index} />
-                        )}
-                        {reelStates[index] === 'stopping' && (
-                          <StoppingReel
-                            key="stopping"
-                            value={reelValues[index]}
-                          />
-                        )}
-                        {reelStates[index] === 'stopped' && (
-                          <StoppedReel
-                            key="stopped"
-                            value={reelValues[index]}
-                          />
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  </div>
-
-                  {/* Glow effect - brighter when stopped */}
+                return (
                   <motion.div
+                    key={name}
+                    initial={{ opacity: 0, scale: 0.8 }}
                     animate={{
-                      opacity:
-                        reelStates[index] === 'stopped'
-                          ? [0.5, 1, 0.5]
-                          : [0.3, 0.6, 0.3],
+                      opacity: 1,
+                      scale: 1,
                     }}
-                    transition={{
-                      duration: 1.5,
-                      repeat: Infinity,
-                      ease: 'easeInOut',
-                      delay: index * 0.2,
-                    }}
-                    className="absolute inset-0 bg-primary-500/20 rounded-xl blur-xl -z-10"
-                  />
-                </motion.div>
-              ))}
+                    transition={{ delay: index * 0.1 }}
+                    className="relative"
+                  >
+                    {/* Reel container */}
+                    <div className={`
+                      bg-gray-900 rounded-xl p-8 border-4 shadow-2xl overflow-hidden
+                      transition-all duration-300
+                      ${isActive ? 'border-primary-500' : 'border-gray-700'}
+                      ${reelState.state === 'stopped' ? 'border-yellow-400' : ''}
+                    `}>
+                      {/* Reel label */}
+                      <div className="text-center mb-6">
+                        <p
+                          className="text-lg font-semibold uppercase tracking-wide"
+                          style={{ color: getBrandColor(index) }}
+                        >
+                          {name}
+                        </p>
+                      </div>
+
+                      {/* Reel viewport with state-based rendering */}
+                      <div className="h-56 flex items-center justify-center relative overflow-hidden">
+                        {/* Fade masks for depth */}
+                        <div className="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-gray-900 via-gray-900/50 to-transparent pointer-events-none z-10" />
+                        <div className="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-gray-900 via-gray-900/50 to-transparent pointer-events-none z-10" />
+
+                        <AnimatePresence mode="wait">
+                          {reelState.state === 'idle' && (
+                            <IdleReel
+                              key="idle"
+                              reelName={name}
+                              brandColor={getBrandColor(index)}
+                            />
+                          )}
+                          {reelState.state === 'spinning' && (
+                            <SpinningReel key="spinning" index={index} />
+                          )}
+                          {reelState.state === 'stopping' && (
+                            <StoppingReel
+                              key="stopping"
+                              value={reelValues[index]}
+                            />
+                          )}
+                          {reelState.state === 'stopped' && (
+                            <StoppedReel
+                              key="stopped"
+                              value={reelValues[index]}
+                            />
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    </div>
+
+                    {/* Glow effect - brighter when active or stopped */}
+                    <motion.div
+                      animate={{
+                        opacity: reelState.state === 'stopped'
+                          ? [0.6, 1, 0.6]
+                          : isActive
+                          ? [0.4, 0.7, 0.4]
+                          : [0.1, 0.2, 0.1],
+                      }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: 'easeInOut',
+                      }}
+                      className="absolute inset-0 rounded-xl blur-xl -z-10"
+                      style={{
+                        backgroundColor: reelState.state === 'stopped'
+                          ? '#F59E0B'
+                          : getBrandColor(index),
+                        opacity: 0.3,
+                      }}
+                    />
+                  </motion.div>
+                );
+              })}
             </div>
           </CardBody>
         </Card>
