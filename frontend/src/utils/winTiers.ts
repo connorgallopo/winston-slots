@@ -32,5 +32,31 @@ export const getWinMessage = (total: number): string => {
 };
 
 export const shouldPlayBigWinEffects = (total: number): boolean => {
-  return getWinTier(total) === WinTier.Epic || getWinTier(total) === WinTier.Legendary;
+  return getWinTier(total) !== WinTier.Normal;
+};
+
+export const getShakeIntensity = (tier: WinTier): 'low' | 'medium' | 'high' => {
+  switch (tier) {
+    case WinTier.Legendary:
+      return 'high';
+    case WinTier.Epic:
+      return 'medium';
+    case WinTier.Big:
+      return 'medium';
+    default:
+      return 'low';
+  }
+};
+
+export const getConfettiCount = (tier: WinTier): number => {
+  switch (tier) {
+    case WinTier.Legendary:
+      return 200;
+    case WinTier.Epic:
+      return 150;
+    case WinTier.Big:
+      return 100;
+    default:
+      return 0;
+  }
 };
